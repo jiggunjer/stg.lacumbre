@@ -1,0 +1,61 @@
+backend:
+  name: github
+  repo: jiggunjer/lacumbre
+  branch: main
+  base_url: https://lacumbre-gallery-oauth.jurgen-vanlunenburg.workers.dev
+
+# Internal defaults are still needed by the CMS UI,
+# even when using external media providers.
+media_folder: public/media
+public_folder: /media
+
+media_libraries:
+  cloudflare_r2:
+    bucket: YOUR_R2_BUCKET
+    account_id: YOUR_CLOUDFLARE_ACCOUNT_ID
+    access_key_id: YOUR_R2_ACCESS_KEY_ID
+    public_url: https://media.example.com
+    prefix: cms-uploads/
+
+collections:
+  - name: gallery
+    label: Gallery
+    files:
+      - name: gallery_data
+        label: Gallery Images
+        file: data/gallery.json
+        format: json
+        fields:
+          - label: Images
+            name: images
+            widget: list
+            summary: "{{fields.order}} - {{fields.alt_en}}"
+            hint: Order is manual for now; drag-and-drop is not yet available.
+            fields:
+              - label: Asset
+                name: src
+                widget: image
+                required: true
+                choose_url: false
+                media_library:
+                  config:
+                    multiple: false
+              - label: Alt text (English)
+                name: alt_en
+                widget: string
+                required: true
+              - label: Alt text (Dutch)
+                name: alt_nl
+                widget: string
+                required: true
+              - label: Sort order
+                name: order
+                widget: number
+                value_type: int
+                min: 1
+                required: true
+              - label: Featured
+                name: featured
+                widget: boolean
+                required: false
+                default: false
