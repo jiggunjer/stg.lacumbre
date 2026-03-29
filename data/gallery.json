@@ -290,6 +290,13 @@
       "alt_en": "Living room with smart TV and fireplace",
       "alt_nl": "Woonkamer met smart TV en open haard",
       "order": 47
+    },
+    {
+      "src": "/media/hollow.1920x1080.png",
+      "alt_en": "test",
+      "alt_nl": "test",
+      "order": 1,
+      "featured": false
     }
   ]
 }
