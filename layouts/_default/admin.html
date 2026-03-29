@@ -28,14 +28,14 @@
               "name" "images"
               "widget" "list"
               "summary" "{{fields.order}} - {{fields.alt_en}}"
-              "hint" "Local debug mode uses manual order values and writes uploads to the local media folder."
+              "hint" "Local debug: use choose URL or local folder; production uses R2 Asset Manager."
               "fields" (slice
                 (dict
                   "label" "Asset"
                   "name" "src"
                   "widget" "image"
                   "required" true
-                  "choose_url" false
+                  "choose_url" true
                 )
                 (dict
                   "label" "Alt text (English)"
@@ -70,8 +70,35 @@
         )
       )
     )
+    (dict
+      "name" "videos"
+      "label" "Videos"
+      "files" (slice
+        (dict
+          "name" "videos_data"
+          "label" "YouTube Videos"
+          "file" "data/videos.json"
+          "format" "json"
+          "fields" (slice
+            (dict
+              "label" "Videos"
+              "name" "videos"
+              "widget" "list"
+              "summary" "{{fields.order}} - {{fields.title_en}}"
+              "fields" (slice
+                (dict "label" "YouTube URL" "name" "url" "widget" "string" "required" true)
+                (dict "label" "Title (English)" "name" "title_en" "widget" "string" "required" true)
+                (dict "label" "Title (Dutch)" "name" "title_nl" "widget" "string" "required" true)
+                (dict "label" "Sort order" "name" "order" "widget" "number" "value_type" "int" "min" 1 "required" true)
+              )
+            )
+          )
+        )
+      )
+    )
   )
 -}}
+{{- $cmsWorkerBaseURL := site.Params.cmsWorkerBaseURL | default "" -}}
 <!doctype html>
 <html lang="en">
   <head>
@@ -81,6 +108,14 @@
     <title>La Cumbre Gallery CMS</title>
   </head>
   <body>
+    {{- if $cmsWorkerBaseURL -}}
+    <a
+      href="{{ $cmsWorkerBaseURL }}/assets"
+      target="_blank"
+      rel="noopener noreferrer"
+      style="position:fixed;top:12px;right:12px;z-index:99999;padding:0.5rem 0.85rem;border-radius:8px;background:#238636;color:#fff;font:600 0.875rem system-ui,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.2);"
+    >Manage Assets (R2)</a>
+    {{- end -}}
     {{ if $isDebug }}
     <script>
       window.LACUMBRE_CMS_LOCAL_CONFIG = {{ $localConfig | jsonify | safeJS }};

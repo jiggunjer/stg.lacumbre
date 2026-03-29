@@ -9,10 +9,21 @@ name = "stg-api"
 main = "src/index.ts"
 compatibility_date = "2025-01-15"
 
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "lacumbre-staging"
+
 [vars]
 GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
 ALLOWED_EMAILS = "admin@example.com"
+# Public URL for R2 objects (custom domain or r2.dev). Used for list/copy links in the asset manager.
+R2_PUBLIC_URL = "https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev"
+# Object key prefix for CMS uploads (must end with /).
+R2_PREFIX = "cms-uploads/"
+# Hugo site origin for “Back to CMS” in the asset manager (no trailing slash).
+CMS_SITE_URL = "https://stg.lacumbre-villa.casa"
 
 # Secrets (never put these in this file; set via CLI):
 #   npx wrangler secret put GOOGLE_CLIENT_SECRET
 #   npx wrangler secret put GITHUB_PAT
+#   npx wrangler secret put SESSION_SECRET   # random string for signing asset-manager session cookies

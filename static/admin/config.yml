@@ -1,8 +1,8 @@
 backend:
   name: github
-  repo: jiggunjer/lacumbre
-  branch: main
-  base_url: https://api.lacumbre.workers.dev
+  repo: jiggunjer/stg.lacumbre
+  branch: stg
+  base_url: https://stg-api.lacumbre.workers.dev
 
 # Internal defaults are still needed by the CMS UI,
 # even when using external media providers.
@@ -11,10 +11,10 @@ public_folder: /media
 
 media_libraries:
   cloudflare_r2:
-    bucket: YOUR_R2_BUCKET
-    account_id: YOUR_CLOUDFLARE_ACCOUNT_ID
-    access_key_id: YOUR_R2_ACCESS_KEY_ID
-    public_url: https://media.example.com
+    bucket: https://39cb7dcebd0d28fc67ffd49d682bd1de.r2.cloudflarestorage.com/lacumbre-staging
+    account_id: 39cb7dcebd0d28fc67ffd49d682bd1de
+    access_key_id: cb9b37faaaf30d78cdbd93eade14bd41
+    public_url: https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev
     prefix: cms-uploads/
 
 collections:
@@ -36,10 +36,8 @@ collections:
                 name: src
                 widget: image
                 required: true
-                choose_url: false
-                media_library:
-                  config:
-                    multiple: false
+                choose_url: true
+                hint: Upload images in the R2 Asset Manager (opens from /admin), then paste the public URL here.
               - label: Alt text (English)
                 name: alt_en
                 widget: string
@@ -59,3 +57,34 @@ collections:
                 widget: boolean
                 required: false
                 default: false
+  - name: videos
+    label: Videos
+    files:
+      - name: videos_data
+        label: YouTube Videos
+        file: data/videos.json
+        format: json
+        fields:
+          - label: Videos
+            name: videos
+            widget: list
+            summary: "{{fields.order}} - {{fields.title_en}}"
+            fields:
+              - label: YouTube URL
+                name: url
+                widget: string
+                required: true
+              - label: Title (English)
+                name: title_en
+                widget: string
+                required: true
+              - label: Title (Dutch)
+                name: title_nl
+                widget: string
+                required: true
+              - label: Sort order
+                name: order
+                widget: number
+                value_type: int
+                min: 1
+                required: true

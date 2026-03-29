@@ -1,6 +1,10 @@
 {{ define "main" }}
 {{ $galleryImages := sort .Site.Data.gallery.images "order" }}
 {{ $galleryLen := len $galleryImages }}
+{{ $rawVideos := slice }}
+{{ with .Site.Data.videos }}{{ with .videos }}{{ $rawVideos = . }}{{ end }}{{ end }}
+{{ $galleryVideos := sort $rawVideos "order" }}
+{{ $videoLen := len $galleryVideos }}
 
 <div class="gallery-page">
   <header class="gallery-header">
@@ -23,6 +27,34 @@
     </button>
     {{ end }}
   </div>
+
+  {{ if gt $videoLen 0 }}
+  <section class="gallery-videos" aria-labelledby="gallery-videos-heading">
+    <h2 id="gallery-videos-heading" class="gallery-videos-title">
+      {{ if eq .Language.Lang "nl" }}Video's{{ else }}Videos{{ end }}
+    </h2>
+    <div class="gallery-video-grid">
+      {{ range $galleryVideos }}
+        {{ $ytid := partial "youtube-id.html" .url }}
+        {{ if $ytid }}
+        <div class="gallery-video-card">
+          <div class="gallery-video-embed">
+            <iframe
+              title="{{ if eq $.Language.Lang "nl" }}{{ .title_nl }}{{ else }}{{ .title_en }}{{ end }}"
+              src="https://www.youtube-nocookie.com/embed/{{ $ytid }}"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+          </div>
+          <p class="gallery-video-caption">{{ if eq $.Language.Lang "nl" }}{{ .title_nl }}{{ else }}{{ .title_en }}{{ end }}</p>
+        </div>
+        {{ end }}
+      {{ end }}
+    </div>
+  </section>
+  {{ end }}
 </div>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
@@ -70,6 +102,35 @@
     transition: transform .3s;
   }
   .gallery-item:hover img { transform: scale(1.04); }
+
+  .gallery-videos { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--clr-border); }
+  .gallery-videos-title { font-size: 1.35rem; color: var(--clr-accent); text-align: center; margin: 0 0 1.25rem; }
+  .gallery-video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 1.25rem;
+  }
+  .gallery-video-card { background: var(--clr-border); border-radius: 8px; overflow: hidden; }
+  .gallery-video-embed {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #111;
+  }
+  .gallery-video-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .gallery-video-caption {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--clr-muted);
+    text-align: center;
+  }
 
   /* Lightbox */
   .lightbox {
