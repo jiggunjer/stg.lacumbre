@@ -83,9 +83,5 @@ Als u wilt reserveren voor een beschikbare periode of een andere vraag heeft, ne
 **Ricardo van Lunenburg**
 
 - Mail: `r.vanlunenburg123@gmail.com`
-- Mobiel: `+31 6 469 78 492`
-- Mobiel: `+34 611 197 410`
-
-Beide nummers zijn ook via WhatsApp beschikbaar.
 
 {{< /section >}}

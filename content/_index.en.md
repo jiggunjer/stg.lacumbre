@@ -83,9 +83,5 @@ If you would like to book an available period or have another question, please c
 **Ricardo van Lunenburg**
 
 - Email: `r.vanlunenburg123@gmail.com`
-- Mobile: `+31 6 469 78 492`
-- Mobile: `+34 611 197 410`
-
-Both numbers are also available via WhatsApp.
 
 {{< /section >}}

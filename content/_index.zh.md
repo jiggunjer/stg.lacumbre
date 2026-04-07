@@ -83,9 +83,5 @@ description: "位于 Benitachell（Costa Blanca）的豪华私人泳池度假别
 **Ricardo van Lunenburg**
 
 - 邮箱：`r.vanlunenburg123@gmail.com`
-- 手机：`+31 6 469 78 492`
-- 手机：`+34 611 197 410`
-
-两个号码也都支持 WhatsApp。
 
 {{< /section >}}
