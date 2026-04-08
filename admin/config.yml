@@ -3,7 +3,6 @@ backend:
   repo: jiggunjer/stg.lacumbre
   branch: stg
   base_url: https://stg-api.lacumbre.workers.dev
-# base_url is for the OAuth proxy. GH repo url is inferred by the CMS from backend name.
 
 # Internal defaults are still needed by the CMS UI,
 # even when using external media providers.
@@ -37,10 +36,8 @@ collections:
                 name: src
                 widget: image
                 required: true
-                choose_url: false
-                media_library:
-                  config:
-                    multiple: false
+                choose_url: true
+                hint: Upload images in the R2 Asset Manager (opens from /admin), then paste the public URL here.
               - label: Alt text (English)
                 name: alt_en
                 widget: string
@@ -60,3 +57,34 @@ collections:
                 widget: boolean
                 required: false
                 default: false
+  - name: videos
+    label: Videos
+    files:
+      - name: videos_data
+        label: YouTube Videos
+        file: data/videos.json
+        format: json
+        fields:
+          - label: Videos
+            name: videos
+            widget: list
+            summary: "{{fields.order}} - {{fields.title_en}}"
+            fields:
+              - label: YouTube URL
+                name: url
+                widget: string
+                required: true
+              - label: Title (English)
+                name: title_en
+                widget: string
+                required: true
+              - label: Title (Dutch)
+                name: title_nl
+                widget: string
+                required: true
+              - label: Sort order
+                name: order
+                widget: number
+                value_type: int
+                min: 1
+                required: true
