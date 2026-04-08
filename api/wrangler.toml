@@ -27,3 +27,17 @@ CMS_SITE_URL = "https://stg.lacumbre-villa.casa"
 #   npx wrangler secret put GOOGLE_CLIENT_SECRET
 #   npx wrangler secret put GITHUB_PAT
 #   npx wrangler secret put SESSION_SECRET   # random string for signing asset-manager session cookies
+
+[env.staging]
+name = "stg-api"
+
+[[env.staging.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "lacumbre-staging"
+
+[env.staging.vars]
+GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+ALLOWED_EMAILS = "admin@example.com"
+R2_PUBLIC_URL = "https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev"
+R2_PREFIX = "cms-uploads/"
+CMS_SITE_URL = "https://stg.lacumbre-villa.casa"

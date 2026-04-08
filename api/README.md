@@ -52,6 +52,11 @@ From the `api/` directory:
    npm run deploy
    ```
 
+   For explicit staging environment config (same worker + bucket bindings):
+   ```bash
+   npm run deploy:staging
+   ```
+
 5. **Google Cloud Console** — add redirect URI `https://<worker>/callback`.
 
 ## Local development
