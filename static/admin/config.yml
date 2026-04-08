@@ -6,16 +6,8 @@ backend:
 
 # Internal defaults are still needed by the CMS UI,
 # even when using external media providers.
-media_folder: public/media
-public_folder: /media
-
-media_libraries:
-  cloudflare_r2:
-    bucket: https://39cb7dcebd0d28fc67ffd49d682bd1de.r2.cloudflarestorage.com/lacumbre-staging
-    account_id: 39cb7dcebd0d28fc67ffd49d682bd1de
-    access_key_id: cb9b37faaaf30d78cdbd93eade14bd41
-    public_url: https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev
-    prefix: cms-uploads/
+media_folder: static/cms-media-local
+public_folder: /cms-media-local
 
 collections:
   - name: gallery
