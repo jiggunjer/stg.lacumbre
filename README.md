@@ -40,7 +40,7 @@ Keep `hugo.toml` **`params.cmsWorkerBaseURL`** in sync with `static/admin/config
 
 ### OAuth architecture (Sveltia / GitHub)
 
-The CMS uses the GitHub backend, but sign-in identity comes from Google:
+The CMS writes to the GitHub backend, but sign-in identity comes from Google:
 
 1. User clicks Sign In on `/admin/`
 2. CMS opens OAuth proxy (`backend.base_url`)
@@ -84,10 +84,11 @@ Set the allowed Google accounts in Worker env var:
 
 Any authenticated Google account not listed is denied. Comma delimited string.
 This may be redundant if Google OAuth is in Testing mode with its own allowlist.
+This may be redundant as on the Google oath side it is deployed as Testing, not Public, which means whitelisted emails on a per Gcloud Project basis.
 
 ### Cloudflare Worker deploy
 
-From `oauth-proxy/`:
+From `api/`:
 
 1. Install dependencies:
    - `npm install`

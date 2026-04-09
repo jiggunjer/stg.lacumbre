@@ -2,6 +2,8 @@ name: Deploy Hugo site to GitHub Pages
 
 on:
   push:
+    branches:
+      - stg
   workflow_dispatch:
 
 permissions:
@@ -15,7 +17,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      HUGO_BASEURL: https://lacumbre-villa.casa/
+      HUGO_BASEURL: https://stg.lacumbre-villa.casa/
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -35,4 +37,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           publish_branch: gh-pages
-          cname: lacumbre-villa.casa
+          cname: stg.lacumbre-villa.casa

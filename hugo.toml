@@ -1,5 +1,5 @@
 # Canonical production domain.
-baseURL       = 'https://lacumbre-villa.casa/'
+baseURL       = 'https://stg.lacumbre-villa.casa/'
 title         = 'La Cumbre del Sol'
 theme         = 'lacumbre'
 
