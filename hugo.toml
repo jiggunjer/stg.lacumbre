@@ -146,6 +146,8 @@ defaultContentLanguageInSubdir = true
       footerText  = 'Generalitat Valenciana 登记号 VT-453316-A'
 
 [params]
+  # Same host as static/admin/config.yml backend.base_url — used for “Manage Assets” on /admin/
+  cmsWorkerBaseURL = 'https://stg-api.lacumbre.workers.dev'
   heroImage = 'https://media.vrbo.com/lodging/22000000/22000000/21994700/21994655/292e4717.jpg'
   pricesCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgW2QgnB_z-uc-3e1HkbX_CLnuv0a5_71WGfeb9iXyHSG_avrPCsSYLjt0uu9KElkuzQt1PPOU6QZe/pub?gid=0&single=true&output=csv'
   availabilityCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTtkk_HbkEveOlhhSYnfH3y1fgMzaeNq6PQelNK3HYP4BWXf2yB3Oe_yxH8gzyDx9G7yLvJurJLUVcY/pub?gid=0&single=true&output=csv'
