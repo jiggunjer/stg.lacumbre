@@ -1,4 +1,4 @@
-name: Deploy Hugo site to GitHub Pages
+name: Deploy
 
 on:
   push:
@@ -38,3 +38,27 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           cname: stg.lacumbre-villa.casa
+
+  deploy-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy Worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
