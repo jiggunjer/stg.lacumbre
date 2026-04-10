@@ -109,12 +109,58 @@
   </head>
   <body>
     {{- if $cmsWorkerBaseURL -}}
-    <a
-      href="{{ $cmsWorkerBaseURL }}/assets"
-      target="_blank"
-      rel="noopener noreferrer"
-      style="position:fixed;top:12px;right:12px;z-index:99999;padding:0.5rem 0.85rem;border-radius:8px;background:#238636;color:#fff;font:600 0.875rem system-ui,sans-serif;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.2);"
-    >Manage Assets (R2)</a>
+    <button
+      id="lacumbre-r2-btn"
+      type="button"
+      style="position:fixed;bottom:16px;left:16px;z-index:99999;padding:0.5rem 0.85rem;border-radius:8px;background:#238636;color:#fff;font:600 0.875rem system-ui,sans-serif;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:0.4rem;"
+    ><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M2 2h5v5H2V2zm7 0h5v5H9V2zM2 9h5v5H2V9zm7 1.5L11.5 9 14 10.5 11.5 14 9 10.5z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>R2 Assets</button>
+    <div id="lacumbre-r2-toast" style="display:none;position:fixed;bottom:60px;left:16px;z-index:100000;padding:0.6rem 1rem;border-radius:8px;background:#1f6feb;color:#fff;font:600 0.8rem system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.4);transition:opacity .3s;pointer-events:none;"></div>
+    <script>
+    (function() {
+      var workerBase = {{ $cmsWorkerBaseURL | jsonify | safeJS }};
+      var btn = document.getElementById("lacumbre-r2-btn");
+      var toast = document.getElementById("lacumbre-r2-toast");
+      var popup = null;
+
+      btn.addEventListener("click", function() {
+        var w = 900, h = 650;
+        var left = (screen.width - w) / 2, top = (screen.height - h) / 2;
+        if (popup && !popup.closed) {
+          popup.focus();
+          return;
+        }
+        popup = window.open(
+          workerBase + "/assets?opener=cms",
+          "lacumbre_r2_assets",
+          "width=" + w + ",height=" + h + ",left=" + left + ",top=" + top + ",resizable=yes,scrollbars=yes"
+        );
+      });
+
+      function showToast(msg, duration) {
+        toast.textContent = msg;
+        toast.style.display = "block";
+        toast.style.opacity = "1";
+        clearTimeout(toast._tid);
+        toast._tid = setTimeout(function() {
+          toast.style.opacity = "0";
+          setTimeout(function() { toast.style.display = "none"; }, 350);
+        }, duration || 3000);
+      }
+
+      window.addEventListener("message", function(event) {
+        if (!event.data || typeof event.data !== "object") return;
+        if (event.data.type !== "lacumbre:r2:use") return;
+        var url = event.data.url;
+        if (!url) return;
+
+        navigator.clipboard.writeText(url).then(function() {
+          showToast("R2 URL copied — paste into the image field, then Save.", 5000);
+        }).catch(function() {
+          showToast("URL: " + url, 8000);
+        });
+      });
+    })();
+    </script>
     {{- end -}}
     {{ if $isDebug }}
     <script>

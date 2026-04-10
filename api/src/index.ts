@@ -213,8 +213,10 @@ async function handleAssetsPage(request: Request, env: Env): Promise<Response> {
   const token = cookies[SESSION_COOKIE];
   const email = token ? await verifySessionToken(token, env.SESSION_SECRET) : null;
 
+  const reqUrl = new URL(request.url);
+  const openedFromCms = reqUrl.searchParams.get("opener") === "cms";
+
   if (!email) {
-    const reqUrl = new URL(request.url);
     const loginUrl = `${reqUrl.origin}/auth?mode=assets`;
     return new Response(renderLoginHtml(loginUrl), {
       status: 200,
@@ -225,7 +227,7 @@ async function handleAssetsPage(request: Request, env: Env): Promise<Response> {
     });
   }
 
-  return new Response(renderAssetManagerHtml(env), {
+  return new Response(renderAssetManagerHtml(env, openedFromCms), {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
@@ -454,10 +456,11 @@ function renderLoginHtml(loginUrl: string): string {
 </html>`;
 }
 
-function renderAssetManagerHtml(env: Env): string {
+function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
   const cmsUrl = escapeHtml(`${(env.CMS_SITE_URL || "").replace(/\/$/, "")}/admin/`);
+  const cmsOrigin = escapeHtml((env.CMS_SITE_URL || "").replace(/\/$/, ""));
+  const hasOpener = openedFromCms;
 
-  // Script uses relative URLs for API calls (same origin as worker)
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -470,7 +473,7 @@ function renderAssetManagerHtml(env: Env): string {
       header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
         padding: 1rem 1.25rem; border-bottom: 1px solid #30363d; background: #161b22; position: sticky; top: 0; z-index: 10; }
       header h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
-      .links { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+      .header-right { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
       a { color: #58a6ff; text-decoration: none; }
       a:hover { text-decoration: underline; }
       .dropzone {
@@ -483,18 +486,29 @@ function renderAssetManagerHtml(env: Env): string {
       #status.err { color: #f85149; }
       #status.ok { color: #3fb950; }
       .grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;
         padding: 0 1.25rem 2rem;
       }
       .card {
         background: #161b22; border: 1px solid #30363d; border-radius: 10px; overflow: hidden;
-        display: flex; flex-direction: column;
+        display: flex; flex-direction: column; position: relative;
       }
-      .thumb-wrap { aspect-ratio: 4/3; background: #21262d; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .card.selected { border-color: #1f6feb; box-shadow: 0 0 0 2px #1f6feb44; }
+      .card .check-overlay {
+        position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%;
+        background: #1f6feb; color: #fff; display: none; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 700; z-index: 2; pointer-events: none;
+      }
+      .card.selected .check-overlay { display: flex; }
+      .thumb-wrap {
+        aspect-ratio: 4/3; background: #21262d; display: flex; align-items: center; justify-content: center;
+        overflow: hidden; cursor: ${hasOpener ? "pointer" : "default"};
+      }
       .thumb-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
       .thumb-wrap .placeholder { color: #8b949e; font-size: 0.75rem; padding: 0.5rem; text-align: center; word-break: break-all; }
       .meta { padding: 0.65rem; font-size: 0.75rem; color: #8b949e; flex: 1; }
       .meta .key { word-break: break-all; color: #c9d1d9; font-size: 0.7rem; margin-bottom: 0.35rem; }
+      .meta .size { color: #8b949e; }
       .actions { display: flex; gap: 0.35rem; padding: 0 0.65rem 0.65rem; flex-wrap: wrap; }
       button {
         font: inherit; cursor: pointer; border: none; border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.75rem;
@@ -505,36 +519,104 @@ function renderAssetManagerHtml(env: Env): string {
       button.danger:hover { background: #f8514922; }
       button.primary { background: #238636; border-color: #238636; color: #fff; }
       button.primary:hover { background: #2ea043; }
+      button.cms-use { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+      button.cms-use:hover { background: #388bfd; }
+      button.cms-use:disabled { opacity: 0.4; cursor: not-allowed; }
       .empty { padding: 2rem; text-align: center; color: #8b949e; }
+      #selectionBar {
+        display: none; position: sticky; bottom: 0; z-index: 10; background: #161b22;
+        border-top: 1px solid #30363d; padding: 0.75rem 1.25rem;
+        align-items: center; justify-content: space-between; gap: 0.75rem;
+      }
+      #selectionBar.visible { display: flex; }
+      #selectionBar .sel-info { font-size: 0.85rem; color: #8b949e; }
+      #selectionBar .sel-actions { display: flex; gap: 0.5rem; }
     </style>
   </head>
   <body>
     <header>
       <h1>R2 Asset Manager</h1>
-      <div class="links">
+      <div class="header-right">
         <a href="${cmsUrl}" target="_blank" rel="noopener">Back to CMS</a>
       </div>
     </header>
     <label class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept="image/*,video/*,.pdf">
+      <input type="file" id="fileInput" accept="image/*,video/*,.pdf" multiple>
       <span>Drop files here or click to upload</span>
     </label>
     <p id="status"></p>
     <div id="grid" class="grid"></div>
+    <div id="selectionBar">
+      <span class="sel-info" id="selCount">0 selected</span>
+      <div class="sel-actions">
+        <button type="button" id="clearSelBtn">Clear</button>
+        <button type="button" class="cms-use" id="useInCmsBtn">Use in CMS</button>
+      </div>
+    </div>
     <script>
 (function() {
+  var CMS_ORIGIN = ${JSON.stringify(cmsOrigin)};
+  var HAS_OPENER = ${hasOpener ? "true" : "false"};
   var dropzone = document.getElementById("dropzone");
   var fileInput = document.getElementById("fileInput");
   var statusEl = document.getElementById("status");
   var grid = document.getElementById("grid");
+  var selectionBar = document.getElementById("selectionBar");
+  var selCount = document.getElementById("selCount");
+  var clearSelBtn = document.getElementById("clearSelBtn");
+  var useInCmsBtn = document.getElementById("useInCmsBtn");
+
+  var selected = new Map();
 
   function setStatus(msg, cls) {
     statusEl.textContent = msg || "";
     statusEl.className = cls || "";
   }
 
+  function updateSelectionBar() {
+    var n = selected.size;
+    if (HAS_OPENER && n > 0) {
+      selectionBar.classList.add("visible");
+      selCount.textContent = n + " selected";
+    } else {
+      selectionBar.classList.remove("visible");
+    }
+  }
+
+  function toggleSelect(obj, card) {
+    if (!HAS_OPENER || !obj.publicUrl) return;
+    if (selected.has(obj.key)) {
+      selected.delete(obj.key);
+      card.classList.remove("selected");
+    } else {
+      selected.set(obj.key, obj.publicUrl);
+      card.classList.add("selected");
+    }
+    updateSelectionBar();
+  }
+
+  clearSelBtn.addEventListener("click", function() {
+    selected.clear();
+    grid.querySelectorAll(".card.selected").forEach(function(c) { c.classList.remove("selected"); });
+    updateSelectionBar();
+  });
+
+  useInCmsBtn.addEventListener("click", function() {
+    if (!window.opener) {
+      setStatus("CMS window not found. Copy URLs manually.", "err");
+      return;
+    }
+    selected.forEach(function(url) {
+      window.opener.postMessage({ type: "lacumbre:r2:use", url: url }, CMS_ORIGIN || "*");
+    });
+    setStatus("Sent " + selected.size + " URL(s) to CMS. Paste into the image field.", "ok");
+    selected.clear();
+    grid.querySelectorAll(".card.selected").forEach(function(c) { c.classList.remove("selected"); });
+    updateSelectionBar();
+  });
+
   async function loadList() {
-    setStatus("Loading…");
+    setStatus("Loading\\u2026");
     var res = await fetch("/r2/list", { credentials: "same-origin" });
     if (res.status === 401) { window.location.reload(); return; }
     if (!res.ok) { setStatus("Failed to load list", "err"); return; }
@@ -547,8 +629,16 @@ function renderAssetManagerHtml(env: Env): string {
     return /\\.(jpe?g|png|gif|webp|svg|avif|bmp)(\\?|$)/i.test(url);
   }
 
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1048576).toFixed(1) + " MB";
+  }
+
   function renderGrid(objects) {
     grid.innerHTML = "";
+    selected.clear();
+    updateSelectionBar();
     if (!objects.length) {
       grid.innerHTML = '<p class="empty">No files yet. Upload above.</p>';
       return;
@@ -557,8 +647,17 @@ function renderAssetManagerHtml(env: Env): string {
     objects.forEach(function(obj) {
       var card = document.createElement("div");
       card.className = "card";
+
+      var checkOverlay = document.createElement("div");
+      checkOverlay.className = "check-overlay";
+      checkOverlay.textContent = "\\u2713";
+      card.appendChild(checkOverlay);
+
       var thumb = document.createElement("div");
       thumb.className = "thumb-wrap";
+      if (HAS_OPENER && obj.publicUrl) {
+        thumb.addEventListener("click", function() { toggleSelect(obj, card); });
+      }
       if (obj.publicUrl && isImageUrl(obj.publicUrl)) {
         var img = document.createElement("img");
         img.src = obj.publicUrl;
@@ -571,18 +670,39 @@ function renderAssetManagerHtml(env: Env): string {
         ph.textContent = obj.publicUrl ? "Preview N/A" : "No public URL";
         thumb.appendChild(ph);
       }
+
       var meta = document.createElement("div");
       meta.className = "meta";
       var keyEl = document.createElement("div");
       keyEl.className = "key";
       keyEl.textContent = obj.key;
       meta.appendChild(keyEl);
-      meta.appendChild(document.createTextNode((obj.size || 0) + " bytes"));
+      var sizeEl = document.createElement("span");
+      sizeEl.className = "size";
+      sizeEl.textContent = formatSize(obj.size || 0);
+      meta.appendChild(sizeEl);
+
       var actions = document.createElement("div");
       actions.className = "actions";
+
+      if (HAS_OPENER && obj.publicUrl) {
+        var useBtn = document.createElement("button");
+        useBtn.type = "button";
+        useBtn.className = "cms-use";
+        useBtn.textContent = "Use in CMS";
+        useBtn.onclick = function() {
+          if (!window.opener) {
+            setStatus("CMS window not found. Copy the URL manually.", "err");
+            return;
+          }
+          window.opener.postMessage({ type: "lacumbre:r2:use", url: obj.publicUrl }, CMS_ORIGIN || "*");
+          setStatus("Sent URL to CMS \\u2014 paste into image field.", "ok");
+        };
+        actions.appendChild(useBtn);
+      }
+
       var copyBtn = document.createElement("button");
       copyBtn.type = "button";
-      copyBtn.className = "primary";
       copyBtn.textContent = "Copy URL";
       copyBtn.onclick = function() {
         if (!obj.publicUrl) { setStatus("No public URL configured", "err"); return; }
@@ -592,6 +712,7 @@ function renderAssetManagerHtml(env: Env): string {
           setStatus("Copy failed", "err");
         });
       };
+
       var delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "danger";
@@ -608,6 +729,7 @@ function renderAssetManagerHtml(env: Env): string {
         setStatus("Deleted", "ok");
         loadList();
       };
+
       actions.appendChild(copyBtn);
       actions.appendChild(delBtn);
       card.appendChild(thumb);
@@ -619,7 +741,7 @@ function renderAssetManagerHtml(env: Env): string {
 
   async function uploadFile(file) {
     if (!file) return;
-    setStatus("Uploading…");
+    setStatus("Uploading " + file.name + "\\u2026");
     var fd = new FormData();
     fd.append("file", file);
     var res = await fetch("/r2/upload", { method: "POST", body: fd, credentials: "same-origin" });
@@ -636,7 +758,9 @@ function renderAssetManagerHtml(env: Env): string {
 
   dropzone.addEventListener("click", function() { fileInput.click(); });
   fileInput.addEventListener("change", function() {
-    if (fileInput.files && fileInput.files[0]) uploadFile(fileInput.files[0]);
+    if (fileInput.files) {
+      for (var i = 0; i < fileInput.files.length; i++) uploadFile(fileInput.files[i]);
+    }
     fileInput.value = "";
   });
   ["dragenter", "dragover"].forEach(function(ev) {
@@ -646,8 +770,10 @@ function renderAssetManagerHtml(env: Env): string {
     dropzone.addEventListener(ev, function(e) { e.preventDefault(); dropzone.classList.remove("dragover"); });
   });
   dropzone.addEventListener("drop", function(e) {
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) uploadFile(f);
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (files) {
+      for (var i = 0; i < files.length; i++) uploadFile(files[i]);
+    }
   });
 
   loadList();
