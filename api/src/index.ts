@@ -248,7 +248,7 @@ async function handleR2List(request: Request, env: Env): Promise<Response> {
   const prefix = normalizePrefix(env.R2_PREFIX || "cms-uploads/");
   const listed: Array<{ key: string; size: number; uploaded: string | null; publicUrl: string }> = [];
   let cursor: string | undefined;
-  const publicBase = (env.R2_PUBLIC_URL || "").replace(/\/$/, "");
+  const publicBase = normalizePublicBase(env.R2_PUBLIC_URL);
 
   do {
     const page = await env.R2_BUCKET.list({ prefix, cursor });
@@ -302,7 +302,7 @@ async function handleR2Upload(request: Request, env: Env): Promise<Response> {
     },
   });
 
-  const publicBase = (env.R2_PUBLIC_URL || "").replace(/\/$/, "");
+  const publicBase = normalizePublicBase(env.R2_PUBLIC_URL);
   const publicUrl = publicBase ? `${publicBase}/${key}` : "";
 
   return jsonResponse({ key, publicUrl });
@@ -353,6 +353,23 @@ function jsonResponse(body: unknown, status = 200): Response {
 function normalizePrefix(prefix: string): string {
   const p = prefix.trim() || "cms-uploads/";
   return p.endsWith("/") ? p : `${p}/`;
+}
+
+function normalizePublicBase(value: string | undefined): string {
+  const raw = (value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return raw.replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
 }
 
 function sanitizeFileName(name: string): string {
@@ -438,7 +455,7 @@ function renderLoginHtml(loginUrl: string): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>R2 Asset Manager</title>
+    <title>Media Library</title>
     <style>
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -453,8 +470,8 @@ function renderLoginHtml(loginUrl: string): string {
   </head>
   <body>
     <div class="card">
-      <h1>R2 Asset Manager</h1>
-      <p>Sign in with your allowed Google account to upload and manage CMS images.</p>
+      <h1>Media Library</h1>
+      <p>Sign in with your approved Google account to upload and manage photos, videos, and documents.</p>
       <a class="btn" href="${safeUrl}">Sign in with Google</a>
     </div>
   </body>
@@ -465,34 +482,46 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
   const cmsUrl = escapeHtml(`${(env.CMS_SITE_URL || "").replace(/\/$/, "")}/admin/`);
   const cmsOrigin = escapeHtml((env.CMS_SITE_URL || "").replace(/\/$/, ""));
   const hasOpener = openedFromCms;
+  const mediaFolder = normalizePrefix(env.R2_PREFIX || "cms-uploads/");
+  const safeMediaFolder = escapeHtml(mediaFolder);
+  const publicBase = normalizePublicBase(env.R2_PUBLIC_URL);
+  const hasPublicBase = Boolean(publicBase);
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>R2 Asset Manager</title>
+    <title>Media Library</title>
     <style>
       * { box-sizing: border-box; }
-      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; padding-bottom: 5rem; }
       header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
         padding: 1rem 1.25rem; border-bottom: 1px solid #30363d; background: #161b22; position: sticky; top: 0; z-index: 10; }
       header h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+      header p { margin: 0; color: #8b949e; font-size: 0.9rem; max-width: 34rem; }
+      main { padding: 1rem 1.25rem 2rem; }
       .header-right { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
       a { color: #58a6ff; text-decoration: none; }
       a:hover { text-decoration: underline; }
       .dropzone {
-        margin: 1rem 1.25rem; padding: 2rem; border: 2px dashed #30363d; border-radius: 12px; text-align: center;
+        margin: 0 0 1rem; padding: 2rem; border: 2px dashed #30363d; border-radius: 12px; text-align: center;
         color: #8b949e; background: #161b22; cursor: pointer; transition: border-color .2s, background .2s;
+        touch-action: manipulation; scroll-margin-top: 6rem; outline: none;
       }
       .dropzone.dragover { border-color: #58a6ff; background: #0d1117; }
-      .dropzone input { display: none; }
-      #status { margin: 0 1.25rem 1rem; font-size: 0.875rem; color: #8b949e; min-height: 1.25rem; }
+      .dropzone:focus-visible { border-color: #58a6ff; box-shadow: 0 0 0 3px #1f6feb33; }
+      .dropzone .title { display: block; color: #e6edf3; font-weight: 600; font-size: 1rem; margin-bottom: 0.45rem; }
+      .dropzone .note { display: block; margin-top: 0.65rem; color: #c9d1d9; font-size: 0.8rem; }
+      .info { margin: 0 0 1rem; font-size: 0.875rem; color: #8b949e; }
+      .info.warn { color: #d29922; }
+      .info code, .dropzone .note code { color: #c9d1d9; background: #0d1117; padding: 0.08rem 0.38rem; border-radius: 999px; }
+      #status { margin: 0 0 1rem; font-size: 0.875rem; color: #8b949e; min-height: 1.25rem; }
       #status.err { color: #f85149; }
       #status.ok { color: #3fb950; }
       .grid {
         display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;
-        padding: 0 1.25rem 2rem;
+        padding: 0;
       }
       .card {
         background: #161b22; border: 1px solid #30363d; border-radius: 10px; overflow: hidden;
@@ -512,7 +541,8 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
       .thumb-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
       .thumb-wrap .placeholder { color: #8b949e; font-size: 0.75rem; padding: 0.5rem; text-align: center; word-break: break-all; }
       .meta { padding: 0.65rem; font-size: 0.75rem; color: #8b949e; flex: 1; }
-      .meta .key { word-break: break-all; color: #c9d1d9; font-size: 0.7rem; margin-bottom: 0.35rem; }
+      .meta .name { word-break: break-all; color: #c9d1d9; font-size: 0.82rem; margin-bottom: 0.35rem; font-weight: 600; }
+      .meta .key { word-break: break-all; color: #8b949e; font-size: 0.7rem; margin-bottom: 0.35rem; }
       .meta .size { color: #8b949e; }
       .actions { display: flex; gap: 0.35rem; padding: 0 0.65rem 0.65rem; flex-wrap: wrap; }
       button {
@@ -520,6 +550,8 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
         background: #21262d; color: #e6edf3; border: 1px solid #30363d;
       }
       button:hover { background: #30363d; }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      button:disabled:hover { background: #21262d; }
       button.danger { color: #f85149; border-color: #f8514966; }
       button.danger:hover { background: #f8514922; }
       button.primary { background: #238636; border-color: #238636; color: #fff; }
@@ -536,32 +568,50 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
       #selectionBar.visible { display: flex; }
       #selectionBar .sel-info { font-size: 0.85rem; color: #8b949e; }
       #selectionBar .sel-actions { display: flex; gap: 0.5rem; }
+      @media (max-width: 640px) {
+        header { align-items: flex-start; }
+        main { padding: 0.85rem 1rem 1.5rem; }
+        .dropzone { padding: 1.35rem; }
+        #selectionBar { padding: 0.75rem 1rem; flex-direction: column; align-items: stretch; }
+        #selectionBar .sel-actions { width: 100%; }
+        #selectionBar .sel-actions button { flex: 1; }
+      }
     </style>
   </head>
   <body>
     <header>
-      <h1>R2 Asset Manager</h1>
+      <div>
+        <h1>Media Library</h1>
+        <p>Upload files here, then paste the link into the gallery editor.</p>
+      </div>
       <div class="header-right">
-        <a href="${cmsUrl}" target="_blank" rel="noopener">Back to CMS</a>
+        <a href="${cmsUrl}" target="_blank" rel="noopener">Back to gallery editor</a>
       </div>
     </header>
-    <label class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept="image/*,video/*,.pdf" multiple>
-      <span>Drop files here or click to upload</span>
-    </label>
-    <p id="status"></p>
-    <div id="grid" class="grid"></div>
-    <div id="selectionBar">
-      <span class="sel-info" id="selCount">0 selected</span>
-      <div class="sel-actions">
-        <button type="button" id="clearSelBtn">Clear</button>
-        <button type="button" class="cms-use" id="useInCmsBtn">Use in CMS</button>
+    <main>
+      <input type="file" id="fileInput" accept="image/*,video/*,.pdf" multiple hidden>
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-describedby="folderNote">
+        <span class="title">Add files</span>
+        <span>Tap to choose photos and videos, or drag files here.</span>
+        <span class="note">Showing files from <code>${safeMediaFolder}</code></span>
       </div>
-    </div>
+      ${hasPublicBase ? "" : '<p class="info warn">Shareable links are turned off until the public file link setup is finished.</p>'}
+      <p class="info" id="folderNote">Only files saved in <code>${safeMediaFolder}</code> appear here.</p>
+      <p id="status"></p>
+      <div id="grid" class="grid"></div>
+      <div id="selectionBar">
+        <span class="sel-info" id="selCount">0 selected</span>
+        <div class="sel-actions">
+          <button type="button" id="clearSelBtn">Clear</button>
+          <button type="button" class="cms-use" id="useInCmsBtn">Use selected files</button>
+        </div>
+      </div>
+    </main>
     <script>
 (function() {
   var CMS_ORIGIN = ${JSON.stringify(cmsOrigin)};
   var HAS_OPENER = ${hasOpener ? "true" : "false"};
+  var LIBRARY_FOLDER = ${JSON.stringify(mediaFolder)};
   var dropzone = document.getElementById("dropzone");
   var fileInput = document.getElementById("fileInput");
   var statusEl = document.getElementById("status");
@@ -573,6 +623,26 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
 
   var selected = new Map();
 
+  function isUsablePublicUrl(url) {
+    return /^https?:\\/\\/\\S+$/i.test((url || "").trim());
+  }
+
+  function fileLabelFromKey(key) {
+    var parts = String(key || "").split("/");
+    return parts[parts.length - 1] || "File";
+  }
+
+  function clearDragState() {
+    dropzone.classList.remove("dragover");
+  }
+
+  function addPlaceholder(parent, message) {
+    var ph = document.createElement("div");
+    ph.className = "placeholder";
+    ph.textContent = message;
+    parent.appendChild(ph);
+  }
+
   function setStatus(msg, cls) {
     statusEl.textContent = msg || "";
     statusEl.className = cls || "";
@@ -582,14 +652,14 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
     var n = selected.size;
     if (HAS_OPENER && n > 0) {
       selectionBar.classList.add("visible");
-      selCount.textContent = n + " selected";
+      selCount.textContent = n === 1 ? "1 file selected" : n + " files selected";
     } else {
       selectionBar.classList.remove("visible");
     }
   }
 
   function toggleSelect(obj, card) {
-    if (!HAS_OPENER || !obj.publicUrl) return;
+    if (!HAS_OPENER || !isUsablePublicUrl(obj.publicUrl)) return;
     if (selected.has(obj.key)) {
       selected.delete(obj.key);
       card.classList.remove("selected");
@@ -608,23 +678,23 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
 
   useInCmsBtn.addEventListener("click", function() {
     if (!window.opener) {
-      setStatus("CMS window not found. Copy URLs manually.", "err");
+      setStatus("Gallery editor window not found. Use Copy link instead.", "err");
       return;
     }
     selected.forEach(function(url) {
       window.opener.postMessage({ type: "lacumbre:r2:use", url: url }, CMS_ORIGIN || "*");
     });
-    setStatus("Sent " + selected.size + " URL(s) to CMS. Paste into the image field.", "ok");
+    setStatus("Sent " + selected.size + " link(s) to the gallery editor.", "ok");
     selected.clear();
     grid.querySelectorAll(".card.selected").forEach(function(c) { c.classList.remove("selected"); });
     updateSelectionBar();
   });
 
   async function loadList() {
-    setStatus("Loading\\u2026");
+    setStatus("Loading files\\u2026");
     var res = await fetch("/r2/list", { credentials: "same-origin" });
     if (res.status === 401) { window.location.reload(); return; }
-    if (!res.ok) { setStatus("Failed to load list", "err"); return; }
+    if (!res.ok) { setStatus("Could not load files", "err"); return; }
     var data = await res.json();
     setStatus("");
     renderGrid(data.objects || []);
@@ -645,11 +715,13 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
     selected.clear();
     updateSelectionBar();
     if (!objects.length) {
-      grid.innerHTML = '<p class="empty">No files yet. Upload above.</p>';
+      grid.innerHTML = '<p class="empty">No files found in <code>' + LIBRARY_FOLDER + "</code> yet.</p>";
       return;
     }
     objects.sort(function(a, b) { return (b.uploaded || "").localeCompare(a.uploaded || ""); });
     objects.forEach(function(obj) {
+      var publicUrl = typeof obj.publicUrl === "string" ? obj.publicUrl.trim() : "";
+      var canShare = isUsablePublicUrl(publicUrl);
       var card = document.createElement("div");
       card.className = "card";
 
@@ -660,24 +732,29 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
 
       var thumb = document.createElement("div");
       thumb.className = "thumb-wrap";
-      if (HAS_OPENER && obj.publicUrl) {
+      if (HAS_OPENER && canShare) {
         thumb.addEventListener("click", function() { toggleSelect(obj, card); });
       }
-      if (obj.publicUrl && isImageUrl(obj.publicUrl)) {
+      if (canShare && isImageUrl(publicUrl)) {
         var img = document.createElement("img");
-        img.src = obj.publicUrl;
+        img.src = publicUrl;
         img.alt = "";
         img.loading = "lazy";
+        img.onerror = function() {
+          thumb.innerHTML = "";
+          addPlaceholder(thumb, "Preview unavailable");
+        };
         thumb.appendChild(img);
       } else {
-        var ph = document.createElement("div");
-        ph.className = "placeholder";
-        ph.textContent = obj.publicUrl ? "Preview N/A" : "No public URL";
-        thumb.appendChild(ph);
+        addPlaceholder(thumb, canShare ? "Preview unavailable" : "Shareable link unavailable");
       }
 
       var meta = document.createElement("div");
       meta.className = "meta";
+      var nameEl = document.createElement("div");
+      nameEl.className = "name";
+      nameEl.textContent = fileLabelFromKey(obj.key);
+      meta.appendChild(nameEl);
       var keyEl = document.createElement("div");
       keyEl.className = "key";
       keyEl.textContent = obj.key;
@@ -690,48 +767,49 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
       var actions = document.createElement("div");
       actions.className = "actions";
 
-      if (HAS_OPENER && obj.publicUrl) {
+      if (HAS_OPENER && canShare) {
         var useBtn = document.createElement("button");
         useBtn.type = "button";
         useBtn.className = "cms-use";
-        useBtn.textContent = "Use in CMS";
+        useBtn.textContent = "Use in editor";
         useBtn.onclick = function() {
           if (!window.opener) {
-            setStatus("CMS window not found. Copy the URL manually.", "err");
+            setStatus("Gallery editor window not found. Use Copy link instead.", "err");
             return;
           }
-          window.opener.postMessage({ type: "lacumbre:r2:use", url: obj.publicUrl }, CMS_ORIGIN || "*");
-          setStatus("Sent URL to CMS \\u2014 paste into image field.", "ok");
+          window.opener.postMessage({ type: "lacumbre:r2:use", url: publicUrl }, CMS_ORIGIN || "*");
+          setStatus("Link sent to the gallery editor.", "ok");
         };
         actions.appendChild(useBtn);
       }
 
       var copyBtn = document.createElement("button");
       copyBtn.type = "button";
-      copyBtn.textContent = "Copy URL";
+      copyBtn.textContent = canShare ? "Copy link" : "Link unavailable";
+      copyBtn.disabled = !canShare;
       copyBtn.onclick = function() {
-        if (!obj.publicUrl) { setStatus("No public URL configured", "err"); return; }
-        navigator.clipboard.writeText(obj.publicUrl).then(function() {
-          setStatus("Copied to clipboard", "ok");
+        if (!canShare) { setStatus("Shareable link unavailable", "err"); return; }
+        navigator.clipboard.writeText(publicUrl).then(function() {
+          setStatus("Link copied", "ok");
         }).catch(function() {
-          setStatus("Copy failed", "err");
+          setStatus("Could not copy the link", "err");
         });
       };
 
       var delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "danger";
-      delBtn.textContent = "Delete";
+      delBtn.textContent = "Remove";
       delBtn.onclick = async function() {
-        if (!confirm("Delete this object from R2? Gallery JSON is not changed.")) return;
+        if (!confirm("Remove this file? Any gallery items already using it will keep their current link until you replace it.")) return;
         var url = "/r2/delete?key=" + encodeURIComponent(obj.key);
         var res = await fetch(url, { method: "DELETE", credentials: "same-origin" });
         if (res.status === 401) { window.location.reload(); return; }
         if (!res.ok && res.status !== 204) {
-          setStatus("Delete failed", "err");
+          setStatus("Could not remove the file", "err");
           return;
         }
-        setStatus("Deleted", "ok");
+        setStatus("File removed", "ok");
         loadList();
       };
 
@@ -742,6 +820,14 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
       card.appendChild(actions);
       grid.appendChild(card);
     });
+  }
+
+  async function uploadFiles(files) {
+    if (!files || !files.length) return;
+    clearDragState();
+    for (var i = 0; i < files.length; i++) {
+      await uploadFile(files[i]);
+    }
   }
 
   async function uploadFile(file) {
@@ -757,29 +843,45 @@ function renderAssetManagerHtml(env: Env, openedFromCms: boolean): string {
       setStatus(body.error || "Upload failed", "err");
       return;
     }
-    setStatus("Uploaded: " + (body.publicUrl || body.key), "ok");
+    if (isUsablePublicUrl(body.publicUrl || "")) {
+      setStatus("Upload complete. The file is ready to use.", "ok");
+    } else {
+      setStatus("Upload complete, but the shareable link is unavailable.", "ok");
+    }
     loadList();
   }
 
-  dropzone.addEventListener("click", function() { fileInput.click(); });
-  fileInput.addEventListener("change", function() {
-    if (fileInput.files) {
-      for (var i = 0; i < fileInput.files.length; i++) uploadFile(fileInput.files[i]);
+  function openFilePicker() {
+    clearDragState();
+    fileInput.click();
+  }
+
+  dropzone.addEventListener("click", openFilePicker);
+  dropzone.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openFilePicker();
     }
+  });
+
+  fileInput.addEventListener("change", function() {
+    var files = fileInput.files ? Array.prototype.slice.call(fileInput.files) : [];
     fileInput.value = "";
+    uploadFiles(files);
   });
   ["dragenter", "dragover"].forEach(function(ev) {
     dropzone.addEventListener(ev, function(e) { e.preventDefault(); dropzone.classList.add("dragover"); });
   });
   ["dragleave", "drop"].forEach(function(ev) {
-    dropzone.addEventListener(ev, function(e) { e.preventDefault(); dropzone.classList.remove("dragover"); });
+    dropzone.addEventListener(ev, function(e) { e.preventDefault(); clearDragState(); });
   });
   dropzone.addEventListener("drop", function(e) {
-    var files = e.dataTransfer && e.dataTransfer.files;
-    if (files) {
-      for (var i = 0; i < files.length; i++) uploadFile(files[i]);
-    }
+    var files = e.dataTransfer && e.dataTransfer.files ? Array.prototype.slice.call(e.dataTransfer.files) : [];
+    uploadFiles(files);
   });
+  window.addEventListener("blur", clearDragState);
+  window.addEventListener("dragend", clearDragState);
+  window.addEventListener("drop", clearDragState);
 
   loadList();
 })();
@@ -796,7 +898,7 @@ function renderSuccessHtml(payload: { token: string; provider: string }, cmsOrig
 <html>
   <head>
     <meta charset="utf-8">
-    <title>CMS Login</title>
+    <title>Gallery Editor Sign-in</title>
   </head>
   <body>
     <script>
@@ -830,7 +932,7 @@ function renderSuccessHtml(payload: { token: string; provider: string }, cmsOrig
         }, 300);
       })();
     </script>
-    <p>Authentication successful. You can close this window.</p>
+    <p>Sign-in complete. You can close this window.</p>
   </body>
 </html>`;
 }
@@ -842,10 +944,10 @@ function renderFailure(message: string): Response {
 <html>
   <head>
     <meta charset="utf-8">
-    <title>CMS Login Failed</title>
+    <title>Sign-in Failed</title>
   </head>
   <body>
-    <h1>Authentication failed</h1>
+    <h1>Sign-in failed</h1>
     <p>${safeMessage}</p>
   </body>
 </html>`,
