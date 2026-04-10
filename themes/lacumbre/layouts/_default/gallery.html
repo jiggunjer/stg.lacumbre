@@ -35,20 +35,41 @@
     </h2>
     <div class="gallery-video-grid">
       {{ range $galleryVideos }}
-        {{ $ytid := partial "youtube-id.html" .url }}
-        {{ if $ytid }}
+        {{ $title := cond (eq $.Language.Lang "nl") .title_nl .title_en }}
+        {{ $sourceURL := .url | default .source_url }}
+        {{ $videoType := .type | default "youtube" }}
+        {{ $embedURL := .embed_url }}
+        {{ $ytid := partial "youtube-id.html" $sourceURL }}
+        {{ if and (not $embedURL) $ytid }}
+          {{ $embedURL = printf "https://www.youtube-nocookie.com/embed/%s" $ytid }}
+        {{ end }}
+        {{ if and (not $embedURL) (ne $videoType "youtube") $sourceURL }}
+          {{ $embedURL = $sourceURL }}
+        {{ end }}
+        {{ if $embedURL }}
         <div class="gallery-video-card">
           <div class="gallery-video-embed">
             <iframe
-              title="{{ if eq $.Language.Lang "nl" }}{{ .title_nl }}{{ else }}{{ .title_en }}{{ end }}"
-              src="https://www.youtube-nocookie.com/embed/{{ $ytid }}"
+              title="{{ $title }}"
+              src="{{ $embedURL }}"
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
             ></iframe>
           </div>
-          <p class="gallery-video-caption">{{ if eq $.Language.Lang "nl" }}{{ .title_nl }}{{ else }}{{ .title_en }}{{ end }}</p>
+          <div class="gallery-video-meta">
+            <p class="gallery-video-caption">{{ $title }}</p>
+            {{ if $sourceURL }}
+            <a class="gallery-video-link" href="{{ $sourceURL }}" target="_blank" rel="noopener noreferrer">
+              {{ if eq $videoType "youtube" }}
+                {{ if eq $.Language.Lang "nl" }}Bekijk op YouTube{{ else }}Watch on YouTube{{ end }}
+              {{ else }}
+                {{ if eq $.Language.Lang "nl" }}Open live webcam{{ else }}Open live webcam{{ end }}
+              {{ end }}
+            </a>
+            {{ end }}
+          </div>
         </div>
         {{ end }}
       {{ end }}
@@ -124,12 +145,35 @@
     height: 100%;
     border: 0;
   }
+  .gallery-video-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0.75rem 0.85rem;
+  }
   .gallery-video-caption {
     margin: 0;
-    padding: 0.65rem 0.75rem;
+    padding: 0;
     font-size: 0.9rem;
     color: var(--clr-muted);
     text-align: center;
+  }
+  .gallery-video-link {
+    display: inline-flex;
+    align-self: center;
+    justify-content: center;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.92);
+    color: var(--clr-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .gallery-video-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
   }
 
   /* Lightbox */
