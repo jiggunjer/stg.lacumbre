@@ -1,9 +1,5 @@
 # Cloudflare Worker: CMS auth API (Google OAuth → GitHub token for Sveltia).
-# Public URL: https://stg.api.<workers-subdomain>.workers.dev
-#
-# For https://stg.api.lacumbre.workers.dev — set your account Workers subdomain to
-# "lacumbre" (Cloudflare Dashboard → Workers & Pages → overview / account details).
-# Confirm with: npx wrangler whoami
+# Public URL: https://stg-api.lacumbre.workers.dev
 
 name = "stg-api"
 main = "src/index.ts"
@@ -14,30 +10,13 @@ binding = "R2_BUCKET"
 bucket_name = "lacumbre-staging"
 
 [vars]
-GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-ALLOWED_EMAILS = "admin@example.com"
-# Public URL for R2 objects (custom domain or r2.dev). Used for list/copy links in the asset manager.
-R2_PUBLIC_URL = "https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev"
-# Object key prefix for CMS uploads (must end with /).
-R2_PREFIX = "cms-uploads/"
-# Hugo site origin for “Back to CMS” in the asset manager (no trailing slash).
-CMS_SITE_URL = "https://stg.lacumbre-villa.casa"
-
-# Secrets (never put these in this file; set via CLI):
-#   npx wrangler secret put GOOGLE_CLIENT_SECRET
-#   npx wrangler secret put GITHUB_PAT
-#   npx wrangler secret put SESSION_SECRET   # random string for signing asset-manager session cookies
-
-[env.staging]
-name = "stg-api"
-
-[[env.staging.r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "lacumbre-staging"
-
-[env.staging.vars]
-GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-ALLOWED_EMAILS = "admin@example.com"
 R2_PUBLIC_URL = "https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev"
 R2_PREFIX = "cms-uploads/"
 CMS_SITE_URL = "https://stg.lacumbre-villa.casa"
+
+# Secrets (set via `npx wrangler secret put <NAME>`, never in this file):
+#   GOOGLE_CLIENT_ID        – Google OAuth client ID
+#   GOOGLE_CLIENT_SECRET    – Google OAuth client secret
+#   ALLOWED_EMAILS          – comma-separated allowlist
+#   GITHUB_PAT              – GitHub personal access token for Sveltia
+#   SESSION_SECRET          – random string for signing asset-manager session cookies

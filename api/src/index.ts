@@ -193,6 +193,11 @@ async function handleCallback(request: Request, env: Env): Promise<Response> {
     return renderFailure("Server misconfiguration: GITHUB_PAT is not set.");
   }
 
+  if (env.SESSION_SECRET && env.SESSION_SECRET.trim()) {
+    const sessionToken = await createSessionToken(email, env.SESSION_SECRET, SESSION_MAX_AGE_SECONDS);
+    headers.append("Set-Cookie", createCookie(SESSION_COOKIE, sessionToken, SESSION_MAX_AGE_SECONDS));
+  }
+
   const payload = {
     token: env.GITHUB_PAT,
     provider: "github",
