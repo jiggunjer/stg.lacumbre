@@ -53,7 +53,7 @@ collections:
     label: Videos
     files:
       - name: videos_data
-        label: Gallery Videos
+        label: YouTube Videos
         file: data/videos.json
         format: json
         fields:
@@ -62,26 +62,10 @@ collections:
             widget: list
             summary: "{{fields.order}} - {{fields.title_en}}"
             fields:
-              - label: Type
-                name: type
-                widget: select
-                required: false
-                default: youtube
-                options:
-                  - label: YouTube video
-                    value: youtube
-                  - label: Live webcam embed
-                    value: webcam
-              - label: Video or source URL
+              - label: YouTube URL
                 name: url
                 widget: string
                 required: true
-                hint: Use a YouTube watch/share URL for YouTube entries, or the live player/source URL for a webcam asset.
-              - label: Embed URL
-                name: embed_url
-                widget: string
-                required: false
-                hint: Optional for live webcams or custom players. Leave empty for standard YouTube videos.
               - label: Title (English)
                 name: title_en
                 widget: string
