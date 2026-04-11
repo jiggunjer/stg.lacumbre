@@ -24,12 +24,12 @@ collections:
             summary: "{{fields.order}} - {{fields.alt_en}}"
             hint: Order is manual for now; drag-and-drop is not yet available.
             fields:
-              - label: Asset
+              - label: Image
                 name: src
                 widget: image
                 required: true
                 choose_url: true
-                hint: Upload images in the R2 Asset Manager (opens from /admin), then paste the public URL here.
+                hint: Open the Media Library from the editor, upload the image there, then paste the shareable link here.
               - label: Alt text (English)
                 name: alt_en
                 widget: string
