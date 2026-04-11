@@ -1,3 +1,18 @@
 {
-  "videos": []
+  "videos": [
+    {
+      "type": "webcam",
+      "url": "https://webcams.windy.com/webcams/public/embed/player/1387546809/live",
+      "title_en": "Live webcam: Altea coast near Alicante",
+      "title_nl": "Live webcam: kust van Altea bij Alicante",
+      "order": 1
+    },
+    {
+      "type": "youtube",
+      "url": "https://www.youtube.com/watch?v=CRHSSVXVWMA",
+      "title_en": "English guide: Cala Moraig and Cala Llebeig coastal hike (Benitachell)",
+      "title_nl": "Engelse gids: kustwandeling Cala Moraig en Cala Llebeig (Benitachell)",
+      "order": 2
+    }
+  ]
 }

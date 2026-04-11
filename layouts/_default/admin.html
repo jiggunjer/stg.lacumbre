@@ -76,7 +76,7 @@
       "files" (slice
         (dict
           "name" "videos_data"
-          "label" "YouTube Videos"
+          "label" "Gallery Videos"
           "file" "data/videos.json"
           "format" "json"
           "fields" (slice
@@ -86,7 +86,12 @@
               "widget" "list"
               "summary" "{{fields.order}} - {{fields.title_en}}"
               "fields" (slice
-                (dict "label" "YouTube URL" "name" "url" "widget" "string" "required" true)
+                (dict "label" "Video or source URL" "name" "url" "widget" "string" "required" true)
+                (dict "label" "Embed URL (optional, for live webcams or custom players)" "name" "embed_url" "widget" "string" "required" false)
+                (dict "label" "Type" "name" "type" "widget" "select" "required" false "default" "youtube" "options" (slice
+                  (dict "label" "YouTube video" "value" "youtube")
+                  (dict "label" "Live webcam embed" "value" "webcam")
+                ))
                 (dict "label" "Title (English)" "name" "title_en" "widget" "string" "required" true)
                 (dict "label" "Title (Dutch)" "name" "title_nl" "widget" "string" "required" true)
                 (dict "label" "Sort order" "name" "order" "widget" "number" "value_type" "int" "min" 1 "required" true)
