@@ -6,16 +6,8 @@ backend:
 
 # Internal defaults are still needed by the CMS UI,
 # even when using external media providers.
-media_folder: public/media
-public_folder: /media
-
-media_libraries:
-  cloudflare_r2:
-    bucket: https://39cb7dcebd0d28fc67ffd49d682bd1de.r2.cloudflarestorage.com/lacumbre-staging
-    account_id: 39cb7dcebd0d28fc67ffd49d682bd1de
-    access_key_id: cb9b37faaaf30d78cdbd93eade14bd41
-    public_url: https://pub-6d3b161212ba4abcb693d4a506465ce2.r2.dev
-    prefix: cms-uploads/
+media_folder: static/cms-media-local
+public_folder: /cms-media-local
 
 collections:
   - name: gallery
@@ -32,12 +24,12 @@ collections:
             summary: "{{fields.order}} - {{fields.alt_en}}"
             hint: Order is manual for now; drag-and-drop is not yet available.
             fields:
-              - label: Asset
+              - label: Image
                 name: src
                 widget: image
                 required: true
                 choose_url: true
-                hint: Upload images in the R2 Asset Manager (opens from /admin), then paste the public URL here.
+                hint: Open the Media Library from the editor, upload the image there, then paste the shareable link here.
               - label: Alt text (English)
                 name: alt_en
                 widget: string
@@ -61,7 +53,7 @@ collections:
     label: Videos
     files:
       - name: videos_data
-        label: YouTube Videos
+        label: Gallery Videos
         file: data/videos.json
         format: json
         fields:
@@ -70,10 +62,26 @@ collections:
             widget: list
             summary: "{{fields.order}} - {{fields.title_en}}"
             fields:
-              - label: YouTube URL
+              - label: Type
+                name: type
+                widget: select
+                required: false
+                default: youtube
+                options:
+                  - label: YouTube video
+                    value: youtube
+                  - label: Live webcam embed
+                    value: webcam
+              - label: Video or source URL
                 name: url
                 widget: string
                 required: true
+                hint: Use a YouTube watch/share URL for YouTube entries, or the live player/source URL for a webcam asset.
+              - label: Embed URL
+                name: embed_url
+                widget: string
+                required: false
+                hint: Optional for live webcams or custom players. Leave empty for standard YouTube videos.
               - label: Title (English)
                 name: title_en
                 widget: string
