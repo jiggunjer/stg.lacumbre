@@ -2,17 +2,20 @@
   "videos": [
     {
       "type": "webcam",
-      "url": "https://webcams.windy.com/webcams/public/embed/player/1387546809/live",
-      "title_en": "Live webcam: Altea coast near Alicante",
-      "title_nl": "Live webcam: kust van Altea bij Alicante",
-      "order": 1
+      "url": "https://www.youtube.com/@benicam/live",
+      "embed_url": "https://www.youtube-nocookie.com/embed/live_stream?channel=UCVlxVWLL0C1U9HRe9Nt55Lw",
+      "title_en": "Live webcam: Benidorm beach (Alicante / Costa Blanca)",
+      "title_nl": "Live webcam: strand van Benidorm (Alicante / Costa Blanca)",
+      "order": 1,
+      "visible": true
     },
     {
       "type": "youtube",
       "url": "https://www.youtube.com/watch?v=CRHSSVXVWMA",
       "title_en": "English guide: Cala Moraig and Cala Llebeig coastal hike (Benitachell)",
       "title_nl": "Engelse gids: kustwandeling Cala Moraig en Cala Llebeig (Benitachell)",
-      "order": 2
+      "order": 2,
+      "visible": true
     }
   ]
 }

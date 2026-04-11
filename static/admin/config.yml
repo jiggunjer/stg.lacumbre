@@ -44,6 +44,11 @@ collections:
                 value_type: int
                 min: 1
                 required: true
+              - label: Visible
+                name: visible
+                widget: boolean
+                required: false
+                default: true
               - label: Featured
                 name: featured
                 widget: boolean
