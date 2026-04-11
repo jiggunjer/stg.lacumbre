@@ -3,7 +3,7 @@
 {{ $galleryLen := len $galleryImages }}
 {{ $rawVideos := slice }}
 {{ with .Site.Data.videos }}{{ with .videos }}{{ $rawVideos = . }}{{ end }}{{ end }}
-{{ $visibleVideos := where $rawVideos "visible" "ne" false }}
+{{ $visibleVideos := where $rawVideos "visibility" "ne" "hidden" }}
 {{ $galleryVideos := sort $visibleVideos "order" }}
 {{ $videoLen := len $galleryVideos }}
 

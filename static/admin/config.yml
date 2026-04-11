@@ -49,11 +49,6 @@ collections:
                 widget: boolean
                 required: false
                 default: true
-              - label: Visible
-                name: visible
-                widget: boolean
-                required: false
-                default: true
               - label: Featured
                 name: featured
                 widget: boolean
@@ -106,3 +101,13 @@ collections:
                 value_type: int
                 min: 1
                 required: true
+              - label: Visibility
+                name: visibility
+                widget: select
+                required: false
+                default: visible
+                options:
+                  - label: Visible
+                    value: visible
+                  - label: Hidden
+                    value: hidden

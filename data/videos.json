@@ -7,7 +7,7 @@
       "title_en": "Live webcam: Benidorm beach (Alicante / Costa Blanca)",
       "title_nl": "Live webcam: strand van Benidorm (Alicante / Costa Blanca)",
       "order": 1,
-      "visible": true
+      "visibility": "visible"
     },
     {
       "type": "youtube",
@@ -15,7 +15,7 @@
       "title_en": "English guide: Cala Moraig and Cala Llebeig coastal hike (Benitachell)",
       "title_nl": "Engelse gids: kustwandeling Cala Moraig en Cala Llebeig (Benitachell)",
       "order": 2,
-      "visible": true
+      "visibility": "visible"
     }
   ]
 }
