@@ -95,12 +95,6 @@ collections:
                 name: title_nl
                 widget: string
                 required: true
-              - label: Sort order
-                name: order
-                widget: number
-                value_type: int
-                min: 1
-                required: true
               - label: Visibility
                 name: visibility
                 widget: select
@@ -111,3 +105,9 @@ collections:
                     value: visible
                   - label: Hidden
                     value: hidden
+              - label: Sort order
+                name: order
+                widget: number
+                value_type: int
+                min: 1
+                required: true
