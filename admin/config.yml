@@ -44,6 +44,11 @@ collections:
                 value_type: int
                 min: 1
                 required: true
+              - label: Visible
+                name: visible
+                widget: boolean
+                required: false
+                default: true
               - label: Featured
                 name: featured
                 widget: boolean
@@ -90,6 +95,16 @@ collections:
                 name: title_nl
                 widget: string
                 required: true
+              - label: Visibility
+                name: visibility
+                widget: select
+                required: false
+                default: visible
+                options:
+                  - label: Visible
+                    value: visible
+                  - label: Hidden
+                    value: hidden
               - label: Sort order
                 name: order
                 widget: number
