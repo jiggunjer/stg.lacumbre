@@ -3,7 +3,8 @@
 {{ $galleryLen := len $galleryImages }}
 {{ $rawVideos := slice }}
 {{ with .Site.Data.videos }}{{ with .videos }}{{ $rawVideos = . }}{{ end }}{{ end }}
-{{ $galleryVideos := sort $rawVideos "order" }}
+{{ $visibleVideos := where $rawVideos "visibility" "ne" "hidden" }}
+{{ $galleryVideos := sort $visibleVideos "order" }}
 {{ $videoLen := len $galleryVideos }}
 
 <div class="gallery-page">
@@ -65,7 +66,7 @@
               {{ if eq $videoType "youtube" }}
                 {{ if eq $.Language.Lang "nl" }}Bekijk op YouTube{{ else }}Watch on YouTube{{ end }}
               {{ else }}
-                {{ if eq $.Language.Lang "nl" }}Open live webcam{{ else }}Open live webcam{{ end }}
+                {{ if eq $.Language.Lang "nl" }}Bekijk live webcam{{ else }}Watch live webcam{{ end }}
               {{ end }}
             </a>
             {{ end }}

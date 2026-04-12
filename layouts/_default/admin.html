@@ -94,6 +94,10 @@
                 ))
                 (dict "label" "Title (English)" "name" "title_en" "widget" "string" "required" true)
                 (dict "label" "Title (Dutch)" "name" "title_nl" "widget" "string" "required" true)
+                (dict "label" "Visibility" "name" "visibility" "widget" "select" "required" false "default" "visible" "options" (slice
+                  (dict "label" "Visible" "value" "visible")
+                  (dict "label" "Hidden" "value" "hidden")
+                ))
                 (dict "label" "Sort order" "name" "order" "widget" "number" "value_type" "int" "min" 1 "required" true)
               )
             )
